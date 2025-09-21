@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>T-SMARTKET | Market Canasta & Tecnología</title>
+  <link rel="stylesheet" href="css/styles.css"/>
+<script type="text/javascript" src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script>
+  // Si se deja vacío, usa ./data/productos.xlsx
+  window.CATALOG_XLSX_URL = "https://docs.google.com/spreadsheets/d/1OxWKQFIWEECzwZa6tWzJKcL8xRXTZ2aG/edit?gid=718513671#gid=718513671";
+  // Ejemplo:
+  // window.CATALOG_XLSX_URL = "https://docs.google.com/spreadsheets/d/1OxWKQFIWEECzwZa6tWzJKcL8xRXTZ2aG/edit?gid=718513671#gid=718513671";
+</script>
+</head>
+<body>
+  <!-- Top search bar -->
+  <header class="topbar" role="banner">
+    <div class="topbar-inner">
+      <div class="logo-wrap">
+        <img src="assets/logos/logo.png" alt="Logo T-SMARTKET" class="logo" />
+      </div>
+      <div class="searchbar" role="search">
+        <input id="q" type="search" placeholder="¿Qué estás buscando?" aria-label="Buscar productos"/>
+        <button class="btn search-btn" id="searchBtn" aria-label="Buscar">🔍</button>
+      </div>
+      <nav class="quick-links" aria-label="Accesos">
+        <a href="./cart.html" class="ql" id="cartLink">Tu compra 🛒 (0)</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Categories nav bar -->
+  <nav class="catsbar" aria-label="Categorías principales">
+    <ul>
+      <li><button class="catbtn" data-section="">Inicio</button></li>
+      <li><button class="catbtn" data-section="Canasta Familiar">🥫 Canasta</button></li>
+      <li><button class="catbtn" data-section="Tecnología">💻 Tecnología</button></li>
+      <li><button class="catbtn" data-quick="oferta">🏷️ Promociones</button></li>
+      <li><button class="catbtn" data-quick="instock">✅ En stock</button></li>
+      
+    </ul>
+  </nav>
+
+  <!-- Hero banner -->
+  <section class="hero">
+    <img src="assets/img/banners/hero.png" alt="Súper ofertas T‑SMARTKET" />
+  </section>
+
+  <!-- Benefits row -->
+  <section class="benefits" aria-label="Beneficios">
+    <div class="benefit"><span>🚚</span><div><strong>Domicilio</strong><small>Bogotá y todo Colombia*</small></div></div>
+    <div class="benefit"><span>🛡️</span><div><strong>Compras seguras</strong><small>Más de 40K clientes</small></div></div>
+    <div class="benefit"><span>⭐</span><div><strong>Marcas top</strong><small>Garantía y respaldo</small></div></div>
+    <div class="benefit"><span>🎯</span><div><strong>Mejores precios</strong><small>Ofertas semanales</small></div></div>
+  </section>
+
+  <!-- Filters + grid -->
+  <main class="container" role="main">
+    <aside class="sidebar" aria-label="Filtros">
+      <h2>Filtros</h2>
+      <div class="filter-group inline">
+        <label for="qSide">Buscar</label>
+        <div class="inline-row">
+          <input id="qSide" type="search" placeholder="Buscar..."/>
+          <button id="qSideBtn" class="btn secondary" aria-label="Buscar en catálogo">Buscar</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label for="sectionFilter">Sección</label>
+        <select id="sectionFilter">
+          <option value="">Todas</option>
+          <option value="Canasta Familiar">Canasta Familiar</option>
+          <option value="Tecnología">Tecnología</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="categoria">Categoría</label>
+        <select id="categoria"></select>
+      </div>
+      <div class="filter-group">
+        <label for="subcategoria">Subcategoría</label>
+        <select id="subcategoria"></select>
+      </div>
+      <div class="filter-group">
+        <label for="marca">Marca</label>
+        <select id="marca"></select>
+      </div>
+      <div class="filter-group">
+        <label>Precio</label>
+        <div class="range">
+          <input id="precioMin" type="number" placeholder="Mín" aria-label="Precio mínimo"/>
+          <input id="precioMax" type="number" placeholder="Máx" aria-label="Precio máximo"/>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label for="disponibilidad">Disponibilidad</label>
+        <select id="disponibilidad">
+          <option value="">Todos</option>
+          <option value="instock">En stock</option>
+          <option value="out">Agotado</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="soloOferta">Promociones</label>
+        <div>
+          <input type="checkbox" id="soloOferta" /> <label for="soloOferta">Solo en oferta</label>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label for="sortBy">Ordenar por</label>
+        <select id="sortBy">
+          <option value="relevancia">Relevancia</option>
+          <option value="precioAsc">Precio ↑</option>
+          <option value="precioDesc">Precio ↓</option>
+          <option value="masVendidos">Más vendidos</option>
+        </select>
+      </div>
+      <button id="clearFilters" class="btn secondary" aria-label="Limpiar filtros">Limpiar filtros</button>
+    </aside>
+
+    <section class="content">
+      <div class="offers-header"><h2 class="home-section">Súper Ofertas</h2><button id="toggleOffers" class="btn secondary">Ocultar Ofertas</button></div>
+      <div id="offers" class="offers-row" aria-label="Súper ofertas"></div>
+
+      <h2 class="home-section">Todos los productos</h2>
+      <div id="status" class="status sr-only" role="status" aria-live="polite"></div>
+      <div id="grid" class="grid" aria-label="Listado de productos"></div>
+      <div class="load-more-wrap"><button id="loadMore" class="btn">Cargar más</button></div>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <div id="modal" class="modal" aria-hidden="true" role="dialog" aria-label="Detalle de producto">
+    <div class="modal-content" role="document" tabindex="-1">
+      <button id="closeModal" class="modal-close" aria-label="Cerrar">×</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <footer class="footer" role="contentinfo">
+    <p>© <span id="year"></span> T-SMARTKET • <a href="docs/README.md">README</a> • <a href="docs/LICENCIA.txt">Licencia</a></p>
+  </footer>
+
+  <script type="module">
+    import { initApp } from './js/app.js';
+    initApp();
+  </script>
+
+  <script type="module">
+    import { mountCartBadge } from './js/cart.js';
+    const link = document.getElementById('cartLink');
+    if(link){ mountCartBadge(link); }
+  </script>
+</body>
+</html>

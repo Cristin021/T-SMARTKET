@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>T-SMARTKET — Tu carrito</title>
+  <link rel="stylesheet" href="./css/styles.css"/>
+  
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="./index.html"><img src="assets/logos/logo.png" alt="Logo T-SMARTKET" class="logo"/></a>
+      <nav class="quick-links" aria-label="Accesos">
+        <a href="./index.html" class="ql">Seguir comprando</a>
+        <a href="./cart.html" class="ql" id="cartLink">Tu compra 🛒 (0)</a>
+      </nav>
+    </div>
+  </header>
+
+  
+  <main class="cart-page">
+    <h1>Carrito</h1>
+    <div id="cartEmpty" class="empty" hidden>Tu carrito está vacío.</div>
+
+    <div id="cartList" class="cart-list" hidden></div>
+
+    <div class="cart-summary" id="cartSummary" hidden>
+      <div class="subtotal"><span id="subtotalLabel">Subtotal (0 productos):</span> <strong id="subtotalValue">COP $0</strong></div>
+      <div class="summary-actions">
+        <button class="btn secondary" id="clearBtn">Vaciar carrito</button>
+        <button class="btn primary" id="waBtn">Comprar por WhatsApp</button>
+      </div>
+    </div>
+  </main>
+
+
+  
+  <script type="module">
+    import { COP, byId } from './js/utils.js';
+    import { Cart, mountCartBadge } from './js/cart.js';
+
+    mountCartBadge(document.getElementById('cartLink'));
+
+    const list = byId("cartList");
+    const empty = byId("cartEmpty");
+    const summary = byId("cartSummary");
+    const subtotalLabel = byId("subtotalLabel");
+    const subtotalValue = byId("subtotalValue");
+
+    function qtyStepper(qty, onChange){
+      const wrap = document.createElement("div");
+      wrap.className = "qty-stepper";
+      const minus = document.createElement("button"); minus.textContent = "−"; minus.className = "step";
+      const input = document.createElement("input"); input.type="number"; input.value = qty; input.min="1";
+      const plus = document.createElement("button"); plus.textContent = "+"; plus.className = "step";
+      minus.addEventListener("click", ()=>{ const v=Math.max(1,(parseInt(input.value,10)||1)-1); input.value=v; onChange(v); });
+      plus.addEventListener("click", ()=>{ const v=(parseInt(input.value,10)||1)+1; input.value=v; onChange(v); });
+      input.addEventListener("change", ()=>{ const v=Math.max(1, parseInt(input.value,10)||1); input.value=v; onChange(v); });
+      wrap.append(minus,input,plus);
+      return wrap;
+    }
+
+    function render(){
+      const items = Cart.items;
+      list.innerHTML = "";
+      if(items.length===0){
+        empty.hidden=false; list.hidden=true; summary.hidden=true;
+        return;
+      }
+      empty.hidden=true; list.hidden=false; summary.hidden=false;
+
+      let sum=0; let count=0;
+      items.forEach(i=>{
+        count += i.qty;
+        const row = document.createElement("div"); row.className="cart-item";
+
+        const left = document.createElement("div"); left.className="ci-left";
+        const chk = document.createElement("input"); chk.type="checkbox"; chk.checked=true; chk.className="ci-check";
+        const img = document.createElement("img"); img.className="ci-img"; img.alt=i.nombre; if(i.imagen){ img.src = '.' + i.imagen; }
+        left.append(chk, img);
+
+        const mid = document.createElement("div"); mid.className="ci-mid";
+        const title = document.createElement("div"); title.className="ci-title"; title.textContent = i.nombre;
+        const meta = document.createElement("div"); meta.className="ci-meta"; meta.textContent = `${i.marca||''} ${i.categoria? '• '+i.categoria : ''} ${i.subcategoria? '› '+i.subcategoria : ''}`.trim();
+        const controls = document.createElement("div"); controls.className="ci-controls";
+        const step = qtyStepper(i.qty, (v)=> Cart.setQty(i.id, v));
+        const remove = document.createElement("button"); remove.className="link danger"; remove.textContent="Eliminar";
+        remove.addEventListener("click", ()=> Cart.remove(i.id));
+        const save = document.createElement("button"); save.className="link"; save.textContent="Guardar para más tarde";
+        const compare = document.createElement("button"); compare.className="link"; compare.textContent="Comparar";
+
+        controls.append(step, remove, save, compare);
+
+        mid.append(title, meta, controls);
+
+        const right = document.createElement("div"); right.className="ci-right";
+        const price = document.createElement("div"); price.className="ci-price"; price.textContent = COP.format(i.precioCOP);
+        const badge = document.createElement("div"); badge.className="badge green"; badge.textContent="Disponible";
+        right.append(price, badge);
+
+        row.append(left, mid, right);
+        list.appendChild(row);
+
+        sum += i.precioCOP * i.qty;
+      });
+
+      subtotalLabel.textContent = `Subtotal (${count} producto${count!==1?'s':''}):`;
+      subtotalValue.textContent = COP.format(sum);
+    }
+
+    document.addEventListener("cart:change", render);
+    byId("clearBtn").addEventListener("click", ()=> Cart.clear());
+    byId("waBtn").addEventListener("click", ()=> Cart.checkoutWhatsApp());
+
+    render();
+  </script>
+
+</body>
+</html>
