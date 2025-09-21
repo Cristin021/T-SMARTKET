@@ -27,7 +27,7 @@ export function productCard(p){
   img.alt = p.nombre;
   img.loading = "lazy";
   imgWrap.appendChild(img);
-  if((p.stock|0)===0){ const ov=document.createElement("div"); ov.className="soldout-overlay"; ov.textContent="AGOTADO"; imgWrap.appendChild(ov);}
+  if(p.stock===0){ const ov=document.createElement('div'); ov.className='soldout-overlay'; ov.textContent='AGOTADO'; imgWrap.appendChild(ov);}
 
   const body = document.createElement("div");
   body.className = "body";
@@ -47,24 +47,28 @@ export function productCard(p){
     price.appendChild(old);
   }
 
+  
   const badges = document.createElement("div");
   badges.className = "badges";
-  // badge por stock
-  const s = Number.isFinite(+p.stock)?+p.stock:0;
-  let b = document.createElement("span");
-  if(s<=0){ b.className="badge badge-red"; b.textContent="🔴 Agotado"; }
-  else if(s<=3){ b.className="badge badge-orange"; b.textContent="🟠 ¡Quedan pocas!"; }
-  else if(s<=10){ b.className="badge badge-yellow"; b.textContent="🟡 Bajo stock"; }
-  else { b.className="badge badge-green"; b.textContent="🟢 Disponible"; }
-  badges.appendChild(b);
-  // badge oferta, si aplica
-  if(p.precioAnteriorCOP){ const o=document.createElement("span"); o.className="badge badge-sale"; o.textContent="Oferta"; badges.appendChild(o); }
+  // Oferta
+  if(p.precioAnteriorCOP){
+    const b = document.createElement("span"); b.className="badge badge-sale"; b.textContent="Oferta"; badges.appendChild(b);
+  }
+  // Stock badge
+  const stock = Number.isFinite(+p.stock)? +p.stock : 0;
+  let bStock = document.createElement("span");
+  if(stock<=0){ bStock.className="badge badge-red"; bStock.textContent="🔴 Agotado"; }
+  else if(stock<=3){ bStock.className="badge badge-orange"; bStock.textContent="🟠 ¡Quedan pocas!"; }
+  else if(stock<=10){ bStock.className="badge badge-yellow"; bStock.textContent="🟡 Bajo stock"; }
+  else { bStock.className="badge badge-green"; bStock.textContent="🟢 Disponible"; }
+  badges.appendChild(bStock);
 
   const actions = document.createElement("div");
+
   actions.className = "actions";
   const btn = document.createElement("button");
   btn.className = "btn"; btn.textContent = "Comprar por WhatsApp";
-  if((p.stock|0)===0){ btn.style.display="none"; }
+  if(p.stock===0){ btn.style.display="none"; }
   btn.addEventListener("click", e=>{
     e.stopPropagation();
     window.open(encodeWAText(p), "_blank");
@@ -110,49 +114,40 @@ export function appendMore(target, list, paging){
 
 export function openDetail(p){
   const modal = byId("modal");
-  const body  = byId("modalBody");
+  const body = byId("modalBody");
+  body.innerHTML = "";
+  const wrap = document.createElement("div");
+  wrap.className = "detail";
 
-  const stock = Number.isFinite(+p.stock) ? +p.stock : 0;
-  const precio = COP.format(Number(p.precioCOP)||0);
-  const precioAnt = p.precioAnteriorCOP ? COP.format(Number(p.precioAnteriorCOP)||0) : "";
+  const imgWrap = document.createElement("div");
+  imgWrap.className = "img-wrap";
+  const img = document.createElement("img");
+  img.src = (p.imagen ? "." + p.imagen : "./assets/img/placeholder.png"); img.alt = p.nombre;
+  imgWrap.appendChild(img);
+  if(p.stock===0){ const ov=document.createElement('div'); ov.className='soldout-overlay'; ov.textContent='AGOTADO'; imgWrap.appendChild(ov);}
 
-  const stockBadge = (stock<=0) ? '<span class="badge badge-red">🔴 Agotado</span>' :
-                      (stock<=3) ? '<span class="badge badge-orange">🟠 ¡Quedan pocas!</span>' :
-                      (stock<=10)? '<span class="badge badge-yellow">🟡 Bajo stock</span>' :
-                                   '<span class="badge badge-green">🟢 Disponible</span>';
-  const ofertaBadge = p.precioAnteriorCOP ? '<span class="badge badge-sale">Oferta</span>' : '';
-  const metaLine = [p.marca, p.categoria, p.subcategoria].filter(Boolean).join(' • ');
-  const img = p.imagen || './assets/img/placeholder.png';
-  const title = p.nombre || '';
-  const waLink = `https://wa.me/57XXXXXXXXXX?text=${encodeURIComponent('Hola, me interesa: ' + title)}`;
-
-  body.innerHTML = `
-    <div class="product-detail">
-      <div class="pd-card pd-image">
-        <div class="frame">
-          <img src="${img}" alt="${title}">
-          ${stock===0 ? '<div class="soldout-overlay">AGOTADO</div>' : ''}
-        </div>
-      </div>
-
-      <div class="pd-card pd-info">
-        <h3 class="pd-title">${title}</h3>
-        <div class="pd-meta">${metaLine}</div>
-        <div class="pd-badges">${stockBadge} ${ofertaBadge}</div>
-        <div class="pd-price"><span>${precio}</span> ${precioAnt ? `<del>${precioAnt}</del>` : ''}</div>
-        <div class="pd-actions">
-          ${stock>0 ? `<a class="btn btn-wa" href="${waLink}" target="_blank" rel="noopener">Comprar por WhatsApp</a>` : ``}
-          <button class="btn btn-cart" ${stock>0 ? '' : 'disabled'}>Añadir al carrito</button>
-          <button class="btn btn-outline" id="btnCloseDetail">Cerrar</button>
-        </div>
-        ${p.descripcion ? `<div class="pd-desc">${p.descripcion}</div>` : ''}
-      </div>
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.innerHTML = `
+    <h3>${p.nombre}</h3>
+    <div><strong>Precio:</strong> ${COP.format(p.precioCOP)} ${p.precioAnteriorCOP ? `<span class="old">${COP.format(p.precioAnteriorCOP)}</span>` : ""}</div>
+    <div><strong>Estado:</strong> ${p.stock>0? "Disponible ("+p.stock+")":"Agotado"}</div>
+    <div><strong>Marca:</strong> ${p.marca}</div>
+    <div><strong>SKU:</strong> ${p.sku}</div>
+    <div><strong>Categoría:</strong> ${p.categoria}</div>
+    <div><strong>Subcategoría:</strong> ${p.subcategoria}</div>
+    <p>${p.descripcion}</p>
+    <div class="actions">
+      <button class="btn" ${p.stock===0?"disabled":""} id="buyNow">Comprar por WhatsApp</button>
     </div>
   `;
+  wrap.append(imgWrap, meta);
+  body.appendChild(wrap);
 
-  body.querySelector('#btnCloseDetail')?.addEventListener('click', ()=> closeDetail());
-  modal.setAttribute('aria-hidden','false');
-  byId('closeModal').focus();
+  byId("buyNow")?.addEventListener("click", ()=> window.open(encodeWAText(p), "_blank"));
+
+  modal.setAttribute("aria-hidden","false");
+  byId("closeModal").focus();
 }
 
 export function closeDetail(){
@@ -171,7 +166,7 @@ export function renderOffers(list){
     const left = document.createElement("div");
     left.className = "img-wrap";
     const img = document.createElement("img");
-    img.src = "." + p.imagen; img.alt = p.nombre; img.loading = "lazy";
+    img.src = (p.imagen ? "." + p.imagen : "./assets/img/placeholder.png"); img.alt = p.nombre; img.loading = "lazy";
     left.appendChild(img);
     const right = document.createElement("div");
     right.className = "meta";

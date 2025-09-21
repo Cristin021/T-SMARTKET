@@ -3,23 +3,6 @@ import { byId, debounce, getParams, setParams, EMBEDDED_FALLBACK } from './utils
 import { buildFilters, applyFilters } from './filtros.js';
 import { renderFilters, mountGrid, appendMore, closeDetail, renderOffers, renderEmpty } from './ui.js';
 
-/* ======================================================
-   Google Sheets helper: genera URLs CSV y XLSX export
-   (no usa backticks anidados ni retorna nada fuera de
-   funciones; 100% compatible en navegadores)
-   ====================================================== */
-function toGSheetUrls(url){
-  var m = String(url).match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  if(!m) return null;
-  var id = m[1];
-  var gidMatch = String(url).match(/(?:[?#&]gid=)(\d+)/);
-  var gid = gidMatch ? gidMatch[1] : '';
-  var base = 'https://docs.google.com/spreadsheets/d/' + id;
-  var csv  = base + '/gviz/tq?tqx=out:csv' + (gid ? '&gid=' + gid : '');
-  var xlsx = base + '/export?format=xlsx' + (gid ? '&gid=' + gid : '');
-  return { csv: csv, xlsx: xlsx };
-}
-
 const STATE = {
   data: [],
   filtered: [],
@@ -173,108 +156,17 @@ function bindUI(){
   return { refresh };
 }
 
-
 async function loadData(){
-  const status = document.getElementById("status");
   try{
-    if (!window.XLSX) throw new Error("XLSX no cargó");
-
-    // 1) Origen: Google Sheets (CSV -> XLSX) o local
-    const src = (window.CATALOG_XLSX_URL && window.CATALOG_XLSX_URL.trim()) || './data/productos.xlsx';
-    let res, used = 'local';
-    if (/docs\.google\.com\/spreadsheets/.test(src)) {
-      const u = toGSheetUrls(src);
-      try {
-        res = await fetch(u.csv, { credentials: 'omit' });
-        if (res && res.ok) {
-          used = 'gsheets-csv';
-        } else {
-          res = await fetch(u.xlsx, { credentials: 'omit' });
-          if (res && res.ok) used = 'gsheets-xlsx';
-        }
-      } catch (_) { /* sigue al local */ }
-    }
-    if (!res || !res.ok) {
-      res = await fetch('./data/productos.xlsx');
-      used = 'local';
-    }
+    const res = await fetch("./data/productos.json");
     if(!res.ok) throw new Error("HTTP " + res.status);
-
-    // 2) Parseo según origen
-    let wb;
-    if (used === 'gsheets-csv') {
-      const csv = await res.text();
-      wb = XLSX.read(csv, { type: 'string' });
-    } else {
-      const buf = await res.arrayBuffer();
-      wb  = XLSX.read(buf, { type: 'array' });
-    }
-    const ws  = wb.Sheets[wb.SheetNames[0]];
-
-    // Detect header row (first 30 rows)
-    const rowsRaw = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: "" });
-    const HEADS = [
-      "id","ID","sku","SKU","nombre","Nombre","PRODUCTO","Producto","producto",
-      "categoria","Categoría","Categoria","subcategoria","Subcategoría","Subcategoria",
-      "descripcion","Descripción","Descripcion",
-      "precioCOP","Precio","Precio_COP","PrecioCOP","PrecioCOP_col",
-      "precioAnteriorCOP","PrecioAnterior","Precio_Anterior",
-      "stock","Stock","Existencias","Cantidad",
-      "marca","Marca","imagen","Imagen","image",
-      "destacado","Destacado","Oferta"
-    ].map(s=>s.toLowerCase());
-    let headerRow = 0, best = -1;
-    for(let i=0;i<Math.min(30,rowsRaw.length);i++){
-      const sc = (rowsRaw[i]||[]).reduce((a,c)=> a + (HEADS.includes(String(c).trim().toLowerCase())?1:0),0);
-      if(sc>best){ best=sc; headerRow=i; }
-    }
-
-    const rows = XLSX.utils.sheet_to_json(ws, { defval: "", range: headerRow });
-
-    function parseNumeric(v){
-      if (v == null) return 0;
-      if (typeof v === "number") return v;
-      let s = String(v).trim().replace(/[^0-9,.\-]/g,"");
-      const c = s.lastIndexOf(","), d = s.lastIndexOf(".");
-      let sep = -1;
-      if(c>-1 && d>-1) sep = Math.max(c,d);
-      else if(c>-1) sep = c;
-      else if(d>-1) sep = d;
-      if(sep>-1){
-        const intPart = s.slice(0, sep).replace(/[.,]/g,"");
-        const decPart = s.slice(sep+1).replace(/[.,]/g,"");
-        s = intPart + "." + decPart;
-      } else {
-        s = s.replace(/[.,]/g,"");
-      }
-      const n = Number(s);
-      return Number.isFinite(n) ? n : 0;
-    }
-    function parseIntSafe(v){ const n = parseNumeric(v); return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0; }
-    function parseBool(v){ const t = String(v ?? "").trim().toLowerCase(); return ["true","1","si","sí","y","yes","x"].includes(t); }
-
-    const data = rows.map((r,i)=> ({
-      id:                r.id || r.ID || r.Id || r.sku || r.SKU || (100000+i),
-      nombre:            r.nombre || r.Nombre || r.PRODUCTO || r.Producto || r.producto || `Producto ${100000+i}`,
-      categoria:         r.categoria || r["Categoría"] || r.Categoria || "",
-      subcategoria:      r.subcategoria || r["Subcategoría"] || r.Subcategoria || "",
-      descripcion:       r.descripcion || r["Descripción"] || r.Descripcion || "",
-      precioCOP:         parseNumeric(r.precioCOP ?? r.Precio ?? r.Precio_COP ?? r.PrecioCOP ?? r.PrecioCOP_col),
-      precioAnteriorCOP: parseNumeric(r.precioAnteriorCOP ?? r.PrecioAnterior ?? r.Precio_Anterior),
-      stock:             parseIntSafe(r.stock ?? r.Stock ?? r.Existencias ?? r.Cantidad),
-      marca:             r.marca || r.Marca || "",
-      sku:               r.sku || r.SKU || "",
-      imagen:            r.imagen || r.Imagen || r.image || "",
-      destacado:         parseBool(r.destacado ?? r.Destacado ?? r.Oferta)
-    }));
-
-    if(status){ status.classList.remove("sr-only"); status.textContent = `Catálogo cargado: ${data.length} productos` + (typeof used!=='undefined'?` • fuente: ${used}`:''); }
+    const data = await res.json();
     return data;
-  }catch(e){
-    console.warn("XLSX loader error", e);
-    if(status){ status.classList.remove("sr-only"); status.textContent = "Error XLSX: " + (e && e.message); }
-    // No JSON fallback, para respetar tu pedido
-    return typeof EMBEDDED_FALLBACK !== "undefined" ? EMBEDDED_FALLBACK : [];
+  }catch(err){
+    const status = byId("status");
+    status.classList.remove("sr-only");
+    status.innerHTML = "No se pudo cargar el catálogo externo. Mostrando datos mínimos de respaldo.";
+    return EMBEDDED_FALLBACK;
   }
 }
 
