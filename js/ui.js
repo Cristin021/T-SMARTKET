@@ -122,9 +122,9 @@ export function openDetail(p){
                                    '<span class="badge badge-green">🟢 Disponible</span>';
   const ofertaBadge = p.precioAnteriorCOP ? '<span class="badge badge-sale">Oferta</span>' : '';
   const metaLine = [p.marca, p.categoria, p.subcategoria].filter(Boolean).join(' • ');
-  const img = p.imagen || './assets/img/placeholder.png';
+  const img =  "." + p.imagen || '/assets/img/placeholder.png';
   const title = p.nombre || '';
-  const waLink = `https://wa.me/57XXXXXXXXXX?text=${encodeURIComponent('Hola, me interesa: ' + title)}`;
+  const waLink = `https://wa.me/573194880062?text=${encodeURIComponent('Hola, me interesa: ' + title)}`;
 
   body.innerHTML = `
     <div class="product-detail">
