@@ -50,7 +50,7 @@ export const Cart = {
     return lines.join("\n");
   },
   checkoutWhatsApp(){
-    const numero = "573114140899";
+    const numero = "573194880062";
     const url = `https://wa.me/${numero}?text=${encodeURIComponent(Cart.toWhatsAppText())}`;
     window.open(url, "_blank");
   },
