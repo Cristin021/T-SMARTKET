@@ -1210,3 +1210,113 @@ body {
     height: 120px
   }
 }
+
+/* ====== TOPBAR responsive ====== */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 8px 0;
+  overflow-x: clip
+}
+
+.topbar-inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 12px;
+  display: grid;
+  grid-template-columns: 200px 1fr 160px;
+  gap: 12px;
+  align-items: center;
+}
+
+.topbar-inner>* {
+  min-width: 0
+}
+
+/* evita desbordes en grid */
+
+/* inputs del buscador no crecen de más y ocupan 100% */
+.searchbar {
+  display: flex;
+  gap: 8px;
+  align-items: center
+}
+
+.searchbar input {
+  min-width: 0;
+  width: 100%
+}
+
+/* enlaces/acciones compactas a la derecha */
+.quick-links {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: nowrap
+}
+
+/* --- breakpoint tablet/phone mediano --- */
+@media (max-width: 640px) {
+  .topbar-inner {
+    grid-template-columns: 48px 1fr 40px;
+    /* logo | search | acción */
+    grid-template-areas: "logo search actions";
+    gap: 8px;
+  }
+
+  .logo {
+    width: 40px;
+    height: auto
+  }
+
+  .logo-wrap {
+    grid-area: logo
+  }
+
+  .searchbar {
+    grid-area: search
+  }
+
+  .search-btn {
+    padding: 10px 12px
+  }
+
+  .quick-links {
+    grid-area: actions;
+    gap: 8px
+  }
+}
+
+/* --- phones pequeños: apilar buscador abajo --- */
+@media (max-width: 400px) {
+  .topbar-inner {
+    grid-template-columns: 1fr auto;
+    /* logo | acciones */
+    grid-template-areas:
+      "logo actions"
+      "search search";
+  }
+
+  .logo-wrap {
+    justify-self: start
+  }
+
+  .quick-links {
+    justify-self: end
+  }
+
+  .searchbar {
+    margin-top: 8px
+  }
+}
+
+/* Opcional: evita que la barra de categorías empuje el layout en móvil */
+.catsbar {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch
+}
+
+.catsbar ul {
+  gap: 8px
+}
