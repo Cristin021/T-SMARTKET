@@ -386,3 +386,130 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:s
 .pd-price del{color:#94a3b8;font-weight:500}
 .pd-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem}
 .pd-desc{margin-top:1rem;color:#334155;line-height:1.55}
+
+/* ====== Topbar base ====== */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  flex-wrap: wrap;
+  /* permite que el buscador baje a 2ª fila */
+}
+
+.topbar-logo {
+  flex: 0 0 auto;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.topbar-search {
+  flex: 1 1 520px;
+  min-width: 260px;
+}
+
+.topbar-search input[type="search"],
+.topbar-search input[type="text"] {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  font-size: 16px;
+}
+
+/* ====== Vista móvil (≤ 768px) ====== */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 8px 10px;
+    gap: 10px;
+  }
+
+  /* Orden: logo (1ª fila izq), acciones (1ª fila der), buscador (2ª fila ancho completo) */
+  .topbar-logo {
+    order: 1;
+  }
+
+  .topbar-actions {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .topbar-search {
+    order: 3;
+    flex: 1 0 100%;
+    min-width: 0;
+  }
+
+  /* Botones compactos en móvil */
+  .topbar-actions .btn,
+  .topbar-actions button,
+  .topbar-actions a {
+    height: 36px;
+    min-width: 36px;
+    padding: 0 10px;
+    border-radius: 10px;
+  }
+
+  .topbar-actions .label {
+    display: none;
+  }
+
+  /* oculta textos, deja solo íconos */
+  .topbar-actions .icon {
+    font-size: 20px;
+  }
+
+  /* ajusta íconos */
+}
+
+/* ====== Chips / Categorías (barra debajo de la topbar) ====== */
+.catbar {
+  display: flex;
+  gap: 8px;
+  padding: 6px 14px 10px;
+}
+
+.catbar .catbtn {
+  white-space: nowrap;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-weight: 600;
+  font-size: .9rem;
+}
+
+@media (max-width: 768px) {
+  .catbar {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+    padding: 6px 10px 10px;
+  }
+
+  .catbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .catbar .catbtn {
+    padding: 7px 10px;
+    font-size: .9rem;
+  }
+}
+
+/* Opcional: fija la topbar arriba (sticky) */
+.topbar.is-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #0a4f0a;
+  /* tu verde */
+}
