@@ -124,7 +124,9 @@ export function openDetail(p){
   const metaLine = [p.marca, p.categoria, p.subcategoria].filter(Boolean).join(' • ');
   const img =  "." + p.imagen || '/assets/img/placeholder.png';
   const title = p.nombre || '';
-  const waLink = `https://wa.me/573194880062?text=${encodeURIComponent('Hola, me interesa: ' + title)}`;
+  const numero = "573194880062";
+  const mensaje = `Hola quiero comprar el producto ` +  title + ` de precio ` + precio + ` regálame el link de pago muchas gracias`;
+  const waLink = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
 
   body.innerHTML = `
     <div class="product-detail">

@@ -4,7 +4,7 @@ export const COP = new Intl.NumberFormat('es-CO', { style: 'currency', currency:
 export function byId(id){ return document.getElementById(id); }
 
 export function encodeWAText(producto){
-  const numero = "573114140899";
+  const numero = "573194880062";
   const precio = COP.format(producto.precioCOP);
   const mensaje = `Hola quiero comprar el producto ${producto.nombre} de precio ${precio} regálame el link de pago muchas gracias`;
   const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
